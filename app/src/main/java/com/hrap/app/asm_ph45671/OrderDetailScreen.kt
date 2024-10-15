@@ -1,10 +1,14 @@
 package com.hrap.app.asm_ph45671
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -17,12 +21,18 @@ import com.hrap.app.asm_ph45671.Model.History.Order
 
 @Composable
 fun OrderDetailScreen(order: Order) {
+    val statusColor = if (order.status == "Đã thanh toán") Color.Green else Color.Red
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(text = "Chi tiết đơn hàng", style = MaterialTheme.typography.h5, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Chi tiết đơn hàng",
+            style = MaterialTheme.typography.h5,
+            fontWeight = FontWeight.Bold
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -36,13 +46,19 @@ fun OrderDetailScreen(order: Order) {
         // Thông tin hóa đơn
         Text(text = "Hóa Đơn Thanh Toán", fontWeight = FontWeight.Bold)
         Text(text = "Ngày: ${order.date}")
-        Text(text = "Trạng thái đơn hàng: ${order.status}", color = Color.Green)
+        Text(text = "Trạng thái đơn hàng: ${order.status}", color = statusColor)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Chi tiết số lượng món ăn
-        Text(text = "Số lượng  món: ${order.mainDishQuantity}")
-        Text(text = "Tổng tiền : ${order.mainDishTotal}VND")
+        Text(text = "Số lượng món chính: ${order.mainDishQuantity}")
+
+        // Danh sách tên món và số lượng từng món
+        LazyColumn {
+            items(order.dishes) { dish ->
+                DishItemRow(dish = dish)
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -57,6 +73,25 @@ fun OrderDetailScreen(order: Order) {
 
         // Tổng tiền
         Text(text = "Tổng tiền", fontWeight = FontWeight.Bold, fontSize = 24.sp)
-        Text(text = "${order.totalPrice}VND", fontWeight = FontWeight.Bold, fontSize = 24.sp)
+    }
+}
+
+@Composable
+fun DishItemRow(dish: CartData) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Text(
+            text = dish.product.name,
+            modifier = Modifier.weight(1f),
+            fontSize = 18.sp
+        )
+        Text(
+            text = "${dish.quantity}",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
     }
 }
