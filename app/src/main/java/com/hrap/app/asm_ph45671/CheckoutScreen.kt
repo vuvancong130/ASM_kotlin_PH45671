@@ -1,6 +1,6 @@
 package com.hrap.app.asm_ph45671
 
-import androidx.compose.foundation.background
+import CartViewModel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,24 +8,39 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.RadioButton
 import androidx.compose.material.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.hrap.app.asm_ph45671.ViewModel.HistoryViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
-fun CheckoutScreen(navController: NavHostController) {
+fun CheckoutScreen(
+    navController: NavHostController, historyViewModel: HistoryViewModel, cartViewModel: CartViewModel,
+) {
+    val context = LocalContext.current
+    val cartItems by cartViewModel.cartItems.observeAsState(initial = emptyList())
+    val totalItems = getTotalItems(cartItems)
+    val totalPrice = getTotalPrice(cartItems)
+
+    // Tạo ngày hiện tại
+    val currentDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date())
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -43,30 +58,20 @@ fun CheckoutScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Thông tin lựa chọn phương thức thanh toán
-        PaymentMethodSelector()
+        PaymentMethodSelector(historyViewModel, navController, totalPrice, totalItems, cartItems, currentDate)
+
     }
 }
 
 @Composable
-fun PaymentOption(title: String, backgroundColor: Color) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(backgroundColor)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = title, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        PaymentMethodSelector()
-    }
-}
-@Composable
-fun PaymentMethodSelector() {
-    // State để theo dõi phương thức thanh toán đã chọn
+fun PaymentMethodSelector(historyViewModel: HistoryViewModel,
+                          navController: NavHostController,
+                          totalPrice: Double,
+                          totalItems: Int,
+                          cartItems: List<CartData>,
+                          currentDate: String) {
     val selectedPaymentMethod = remember { mutableStateOf("paypal") } // Giá trị mặc định
-
+    val totalAmount = 140.0 // Giá trị tổng tiền bạn có thể thay đổi theo logic của mình
     Column(modifier = Modifier.padding(16.dp)) {
         Text(text = "Vui lòng chọn một trong những phương thức sau:")
 
@@ -115,11 +120,21 @@ fun PaymentMethodSelector() {
             Text(text = "Thanh toán trực tiếp")
         }
 
-        // Nút Tiếp theo
         Button(
             onClick = {
-                // Xử lý khi bấm nút Tiếp theo, ví dụ: điều hướng hoặc xử lý thanh toán
-                println("Selected payment method: ${selectedPaymentMethod.value}")
+                // Thêm lịch sử đơn hàng vào ViewModel
+                cartItems.forEach { cartItem ->
+                    historyViewModel.addHistory(
+                        id = System.currentTimeMillis().toString(), // Tạo ID duy nhất
+                        paymentMethod = selectedPaymentMethod.value,
+                        products = cartItems, // Truyền danh sách sản phẩm vào
+                        totalAmount = totalPrice,
+                        date = currentDate
+                    )
+                }
+
+                // Điều hướng ra khỏi màn hình sau khi hoàn thành
+                navController.popBackStack()
             },
             modifier = Modifier
                 .fillMaxWidth()

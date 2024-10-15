@@ -24,6 +24,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.hrap.app.asm_ph45671.ViewModel.HistoryViewModel
 
 
 sealed class Screen(val route: String, val label: String, val icon: @Composable () -> Unit) {
@@ -85,12 +86,16 @@ fun BottomNavigationBar(navController: NavHostController) {
 @Composable
 fun NavigationHost(navController: NavHostController, innerPadding: PaddingValues) {
     val cartViewModel: CartViewModel = viewModel(LocalContext.current as ComponentActivity)
+    val historyViewModel: HistoryViewModel = viewModel(LocalContext.current as ComponentActivity)
 
     NavHost(navController, startDestination = Screen.Home.route, modifier = Modifier.padding(innerPadding)) {
         composable(Screen.Home.route) { HomeScreen(navController = navController, viewModel = cartViewModel) }
-        composable(Screen.History.route) { HistoryScreen() }
-        composable(Screen.Cart.route) { CartScreen(viewModel = cartViewModel,navController = navController) } // Truyền viewModel cho CartScreen
+        composable(Screen.History.route) { HistoryScreen(viewModel = historyViewModel,navController) }
+        composable(Screen.Cart.route) { CartScreen(viewModel = cartViewModel, navController = navController) }
         composable(Screen.Profile.route) { ProfileScreen() }
-        composable("checkout") { CheckoutScreen(navController = navController) }  // Thêm màn hình Checkout
+        composable("checkout") {
+            CheckoutScreen(navController = navController, cartViewModel = cartViewModel, historyViewModel = historyViewModel)
+        }
+
     }
 }
